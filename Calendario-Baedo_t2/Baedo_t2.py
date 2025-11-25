@@ -2,7 +2,12 @@ import tkinter as tk
 from tkinter import ttk
 import calendar
 from datetime import datetime, timedelta
+
 class planificador:
+    """
+    Clase para gestionar y visualizar turnos laborales rotativos (4x4, 7x7, etc.).
+    Permite calcular proyecciones de trabajo/descanso en un calendario.
+    """
     def __init__(self, root):
         self.root = root
         self.root.title("planificador")
@@ -16,6 +21,7 @@ class planificador:
         self.crear_leyenda()
         
     def crear_frame_superior(self):
+        """Crea la cabecera con navegación de meses."""
         frame_superior = ttk.Frame(self.root, padding="10")
         frame_superior.grid(row=0, column=0, sticky="ew")
         ttk.Button(frame_superior, text="<", command=self.mes_anterior).grid(row=0, column=0)
@@ -24,6 +30,7 @@ class planificador:
         ttk.Button(frame_superior, text=">", command=self.mes_siguiente).grid(row=0, column=2)
         
     def crear_calendario(self):
+        """Inicializa la estructura de la grilla del calendario."""
         self.frame_calendario = ttk.Frame(self.root, padding="10")
         self.frame_calendario.grid(row=1, column=0, sticky="nsew")
         dias = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
@@ -32,6 +39,7 @@ class planificador:
         self.actualizar_calendario()
         
     def crear_configuracion_turnos(self):
+        """Crea los inputs para seleccionar modalidad y horarios."""
         frame_configuracion = ttk.Frame(self.root, padding="10")
         frame_configuracion.grid(row=2, column=0, sticky="ew")
         # sleccion de modalidad
@@ -43,17 +51,27 @@ class planificador:
         
         # horarios
         
+        # [AUDITORÍA] ERROR DE INTERFAZ (UI):
+        # Conflicto de índices en .grid().
+        # 'Hora inicio' está en row=2.
+        # 'Hora término' TAMBIÉN se asigna a row=2 más abajo.
+        # Esto causa que los widgets se superpongan visualmente.
+        
         ttk.Label(frame_configuracion, text="Hora inicio: ").grid(row=2, column=0)
         self.entrada_inicio = ttk.Entry(frame_configuracion, width=10)
         self.entrada_inicio.grid(row=1, column=1)
         self.entrada_inicio.insert(0, "08:00")
         
-        ttk.Label(frame_configuracion, text="Hora término: ").grid(row=2, column=0)
+        ttk.Label(frame_configuracion, text="Hora término: ").grid(row=2, column=0) # ERROR: row=2 colisiona con el anterior
         self.entrada_termino = ttk.Entry(frame_configuracion, width=10)
         self.entrada_termino.grid(row=2, column=1)
         self.entrada_termino.insert(0, "18:00")
         
     def toggle_dia_trabajo(self, btn, dia):
+        """
+        Calcula y proyecta los días de trabajo/descanso basándose en el día seleccionado.
+        Usa aritmética modular para determinar el estado del ciclo.
+        """
         # Resetear todos los días modificados
         self.dias_modificados.clear()
         
@@ -95,12 +113,14 @@ class planificador:
         self.actualizar_calendario()
             
     def color_original(self, dia):
+        """Retorna el color base del día según la modalidad."""
         dias_trabajo = int(self.modalidad.get().split("x")[0])
         dias_total = dias_trabajo * 2
         es_trabajo = (dia % dias_total) <= dias_trabajo
         return "#90ee90" if es_trabajo else "#FFB6C1"
         
     def crear_leyenda(self):
+        """Muestra la leyenda de colores para Trabajo vs Descanso."""
         frame_leyenda = ttk.Frame(self.root, padding="5")
         frame_leyenda.grid(row=3, column=0, sticky="ew", pady=5)
         
@@ -117,18 +137,25 @@ class planificador:
         ttk.Label(frame_descanso, text=" Días de descanso", font=("Arial", 10)).pack(side="left")
     
     def mes_anterior(self):
+        """Retrocede la visualización al mes previo."""
         self.fecha_actual = self.fecha_actual.replace(day=1) - timedelta(days=1)
         self.actualizar_vista()
         
     def mes_siguiente(self):
+        """Avanza la visualización al mes siguiente."""
         self.fecha_actual = self.fecha_actual.replace(day=28) + timedelta(days=5)
         self.actualizar_vista()
     
     def actualizar_vista(self):
+        """Refresca la etiqueta del mes y la grilla."""
         self.lbl_fecha.config(text=f"{calendar.month_name[self.fecha_actual.month]} {self.fecha_actual.year}")
         self.actualizar_calendario()
         
     def actualizar_calendario(self, event=None):
+        """
+        Redibuja los botones del calendario aplicando los colores
+        almacenados en self.dias_modificados.
+        """
         for widget in self.frame_calendario.grid_slaves():
             if int(widget.grid_info()["row"]) > 0:
                 widget.destroy()

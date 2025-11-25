@@ -3,7 +3,19 @@ from tkinter import messagebox
 import webbrowser
 
 class Calculadora:
+    """
+    Clase principal para la calculadora básica con interfaz gráfica.
+    
+    Maneja la creación de widgets y la lógica de operaciones aritméticas
+    utilizando una matriz de botones.
+    """
     def __init__(self, ventana):
+        """
+        Inicializa la ventana de la calculadora y sus componentes.
+        
+        Args:
+            ventana (tk.Tk): La ventana raíz de la aplicación.
+        """
         # Configuración de la ventana
         self.ventana = ventana
         self.ventana.title('Calculadora')
@@ -36,15 +48,30 @@ class Calculadora:
                 columna = 0
                 fila += 1
         
+        # [AUDITORÍA] NOTA DE DISEÑO:
+        # El botón 'C' se agrega fuera del bucle, dependiendo del estado final 
+        # de las variables 'fila' y 'columna'. Si se agregan más botones a la lista,
+        # este botón podría quedar desalineado.
+        
         # Botón para limpiar la pantalla
         tk.Button(ventana, text='C', width=5, height=2,
                  command=self.limpiar).grid(row=fila, column=columna)
     
     def click_boton(self, valor): # funcion para el clickeo de botones
+        """
+        Maneja el evento de clic en los botones de la calculadora.
+        
+        Args:
+            valor (str): El carácter asociado al botón presionado.
+        """
         if valor == '=':
             # cálculo
             try:
+                # [AUDITORÍA] ERROR DE SEGURIDAD CRÍTICO:
+                # El uso de 'eval()' permite la ejecución de código arbitrario (inyección).
+                # Se mantiene para fines demostrativos, pero no debe usarse en producción.
                 resultado = str(eval(self.operacion))
+                
                 self.pantalla.delete(0, tk.END)
                 self.pantalla.insert(0, resultado)
                 self.operacion = resultado
@@ -61,6 +88,7 @@ class Calculadora:
             self.pantalla.insert(0, self.operacion)
     
     def limpiar(self):
+        """Resetea la operación actual y limpia la pantalla."""
         # funcion limpiar
         self.operacion = ""
         self.pantalla.delete(0, tk.END)
